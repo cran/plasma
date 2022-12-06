@@ -1,0 +1,8 @@
+* Figure out a convenient way to plot the split-risk model when
+predicting outcomes on new data from a SingleModel.
+
+* Add a "heat" method for plasma objects.
+
+* Add a "summary" method for plasma objects
+
+* Add 'cexRow" and 'cexCol" arguments to the 'image' method for "Contributions".

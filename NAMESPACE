@@ -1,0 +1,57 @@
+###
+### NAMESPACE
+###
+
+## Imported methods
+import(methods)
+importFrom("stats",
+           "median", "predict", "formula", "step", "heatmap", "na.omit", "quantile",
+           "aggregate", "qnorm", "sd", "terms")
+importFrom("graphics",
+           "par", "legend", "text", "mtext", "title")
+importFrom("grDevices",
+           "colorRampPalette")
+importFrom("survival",
+           "coxph", "Surv", "survfit")
+importFrom("pls",
+           "plsr")
+importFrom("plsRcox",
+           "plsRcoxmodel")
+importFrom("Polychrome",
+           "memberPlot")
+importFrom("beanplot",
+           "beanplot")
+importFrom("oompaBase",
+           "blueyellow", "redgreen", "bluescale")
+importFrom("viridisLite",
+           "viridis")
+
+## Imputation
+export("meanModeImputer", "samplingImputer")
+
+## MultiOmics class
+exportClass("MultiOmics")
+export("prepareMultiOmics", "loadESCAdata", "loadLUSCdata", "plasmaEnv")
+
+## SingleModel class
+exportClass("SingleModel")
+export("fitSingleModel")
+
+## MuliplePLSCoxModels class
+exportClass("MultiplePLSCoxModels")
+export("fitCoxModels", "getSizes")
+
+## plasma class
+exportClass("plasma")
+export("fitCoxModels", "plasma")
+
+## Contribution class
+exportClass("Contribution")
+export("getCompositeWeights", "getAllWeights", "getFinalWeights",
+       "getTop", "pickSignificant")
+
+exportClass("CombinedWeights")
+export("combineAllWeights", "stdize", "interpret")
+
+## methods
+exportMethods("summary", "plot", "predict", "image", "heat", "barplot")

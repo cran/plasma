@@ -1,0 +1,22 @@
+Plasma v0.5.10 (Release Date: 2022-07-12)
+==============
+
+Bug Fixes:
+
+* Replaced an 'sapply" with "lapply" in the implementation of
+  "extenCoxModels" to get rid of a bug that appeared when all omics
+  data sets use the asme number of components, when the "sapply"
+  converted a list into a matrix.
+
+General:
+
+* Now have complete man pages and vignette.
+
+
+Plasma v0.1.0 (Release Date: 2022-04-01)
+==============
+
+General:
+
+* Intitial version of package
+

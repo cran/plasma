@@ -1,0 +1,5 @@
+%\VignetteIndexEntry{plasma: Partial LeAst Squares for Multiomics Analysis}
+%\VignetteKeywords{OOMPA,plasma,supervised analysis,partial least squares}
+%\VignetteDepends{plasma}
+%\VignettePackage{plasma}
+%\VignetteEngine{R.rsp::asis}
