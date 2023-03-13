@@ -11,7 +11,8 @@ extendCoxModels <- function(object, firstPass, verbose = TRUE) {
   rownames(stores) <- rownames(object@outcome)
   compLevel <- unlist(lapply(tempComps[,2], function(K) 1:K))
   NN <- names(compLevel)
-  nodigit <- !grepl("\\d", NN) # doesn't end wioth a digit
+  ## deal with special case of only one component
+  nodigit <- !grepl("\\d", NN) # doesn't end with a digit
   if (any(nodigit)) {
     NN[nodigit] <- paste(NN[nodigit], "1", sep = "")
   }
@@ -39,12 +40,18 @@ extendCoxModels <- function(object, firstPass, verbose = TRUE) {
       if(verbose) cat("\t", M, "\n", file = stderr())
       Y = Xstores[, featgroups == M]
       learn <- try(plsr(Y ~ X, 2))
-      if (inherits(learn, "try-error")) return(NULL)
-      extend <- predict(learn, X)
+      if (inherits(learn, "try-error")) {
+        learn <- NA
+        extend <- array(0, dim = c(nrow(Y), ncol(Y), 2))
+        dimnames(extend) <- list(rownames(Y),
+                                 paste(M, 1:ncol(Y), sep = ""),
+                                 1:2)
+      } else {
+        extend <- predict(learn, X)
+      }
       list(learn = learn, extend = extend)
     })
     names(plsRegression) <- names(object@data)
-    t(sapply(plsRegression, function(x) dim(x$extend)))
     slurp <- lapply(plsRegression, function(x) x$extend[,,2]) # subset the portion of the 3D array that corresponds to the final item of the output of the plsr function, which fits a model iteratively
     allPred <- do.call(cbind, slurp)
     colnames(allPred) <- NN
@@ -54,7 +61,7 @@ extendCoxModels <- function(object, firstPass, verbose = TRUE) {
   ## Extract predicted values from all component datasets
   componentPredictions <- sapply(componentModels, function(x) x$allPred)
   ## Combine all the predictions into a 3D array
-  myArray <- array(NA, dim = c(nrow(stores), ncol(stores), length(componentPredictions)))
+  myArray <- array(0, dim = c(nrow(stores), ncol(stores), length(componentPredictions)))
   dimnames(myArray) <- list(rownames(stores), colnames(stores),
                             names(object@data))
   for (I in 1:length(componentPredictions)) {
@@ -140,12 +147,18 @@ setMethod("predict", "plasma", function(object, newdata = NULL,
   tempor <- lapply(names(newdata@data), function(N) {
     wb <- componentModels[[N]]
     goForIt <- lapply(names(newdata@data), function(M) {
-      localModel <- componentModels[[N]]$plsRegression[[M]]$learn
-      localTest <- t(testData[[N]])[, dimnames(localModel$coefficients)[[1]]]
-      if (!is.null(localModel)) {
+      wbp <- wb$plsRegression[[M]]
+      localModel <- wbp$learn
+      Z <- wbp$extend
+      if (inherits(localModel, "mvr")) {
+        localTest <- t(testData[[N]])[, dimnames(localModel$coefficients)[[1]]]
         predictions <- predict(localModel, localTest)
       } else {
-        predictions <- NULL
+        Y <- testData[[N]]
+        predictions <- array(NA, dim = c(ncol(Y), ncol(Z), 2))
+        dimnames(predictions) <- list(colnames(Y),
+                                      paste(M, 1:ncol(Z), sep = ""),
+                                      1:2)
       }
       predictions
     })
@@ -168,11 +181,19 @@ setMethod("predict", "plasma", function(object, newdata = NULL,
   barf <- predict(object@fullModel)
   testOut <- newdata@outcome
   meanPreds <- object@meanPredictions
-  
   tstArray <- array(NA, dim = c(nrow(testOut), ncol(meanPreds), length(newdata@data)))
   dimnames(tstArray) <- list(rownames(testOut), colnames(meanPreds), names(newdata@data))
   for (I in 1:length(tempor)) {
     B <- tempor[[I]]
+    if(any(rownames(B) != rownames(tstArray)) ) {
+      stop ("bad rownames, loop:", I, "\n")
+    }
+    if(any(colnames(B) != colnames(tstArray)) ) {
+      stop("bad colnames, loop:", I, "\n")
+    }
+    if (I > dim(tstArray)[3] ) {
+      stop("bad thrid dimesnkon", I, "\n")
+    }
     tstArray[rownames(B), colnames(B), I] <- B
   }
   meanTestPreds <- as.data.frame(apply(tstArray, 1:2, mean, na.rm = TRUE))

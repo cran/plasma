@@ -218,6 +218,17 @@ plot(testD, main = "Test")
 par(opar)
 rm(opar)
 ```
+```{r echo = FALSE, eval = FALSE}
+resn <- 300
+png(file = "ESCA-trainTest.png",
+         width =6*resn, height = 5.5*resn, res = resn, bg = "white")
+opar <- par(mai = c(1.02, 1.32, 0.82, 0.22), mfrow = c(1,2))
+plot(trainD, main = "Train")
+plot(testD, main = "Test")
+par(opar)
+rm(opar)
+dev.off()
+```
 
 # Results
 
@@ -246,7 +257,24 @@ if (!interactive()) {
   plot(firstPass, legloc = "bottomleft") # margins too small inside RStudio window
 }
 ```
-
+```{r echo = FALSE, eval = FALSE}
+fpm <- firstPass@models
+fpm$ClinicalCont <- NULL
+bogo <- firstPass
+bogo@models <- fpm
+resn <- 300
+png(file = "trainKM.png",
+    width = 16*resn, height = 9*resn, res = resn, bg = "white")
+opar <- par(mfrow = c(2, 3))
+for (N in names(bogo@models)) {
+  plot(bogo@models[[N]], main = N,  col = c("dodgerblue4", "firebrick1"), lwd = 2, 
+       xlab = "Time (Days)", ylab = "Fraction Surviving",
+       mark.time = TRUE, legloc = "bottomleft")
+}
+par(opar)
+dev.off()
+rm(fpm, bogo, N, opar, resn)
+```
 On the training set, each of the seven contributing omics data sets is able to find a PLS
 model that can successfully separate high risk from low risk patients (**Figure 3**).
 
@@ -267,7 +295,11 @@ plot on the test data. The model yields a statistically significant (p = 0.0063)
 outcomes between the high and low risk patients.
 
 ```{r plasmaModel}
+set.seed(205649)
 pl <- plasma(MO, firstPass)
+if (FALSE) {
+  save(pl, file = "plESCA.Rda") # then copy manually to silicovore web site
+}
 testpred <- predict(pl, testD)
 ```
 ```{r fig04, fig.width = 6, fig.height = 8, fig.cap = .tag(4, "Kaplan-Meier plot of overall survival on (A) the training set and (B) the test set using the unified `plasma` Cox model.")}
@@ -280,6 +312,19 @@ par(opar)
 rm(opar)
 ```
 
+```{r echo = FALSE, eval = FALSE}
+resn <- 300
+png(file = "ESCA-TAndT.png",
+         width = 10*resn, height = 5*resn, res = resn, bg = "white")
+opar <- par(mfrow=c(1, 2))
+plot(pl, legloc = "topright", main = "Training Data", xlab = "Time (Days)")
+mtext("A", side = 2, at = 1.2, line = 3, cex = 1.5, las = 2)
+plot(testpred, main="Testing Data", xlab = "Time (Days)")
+mtext("B", side = 2, at = 1.2, line = 3, cex = 1.5, las = 2)
+par(opar)
+dev.off()
+rm(opar)
+```
 ## Single Omics
 We want to compare the test results of the joint omics model to the predictions we make on
 the test data from the separate single-omics models. The Kaplan-Meier plots in **Figure 5** 
@@ -300,6 +345,25 @@ if (!interactive()) {
 }
 ```
 
+```{r echo = FALSE, eval = FALSE}
+fpm <- mypreds
+fpm$ClinicalCont <- NULL
+resn <- 300
+png(file = "ESCA-testKM.png",
+    width = 16*resn, height = 9*resn, res = resn, bg = "white")
+opar <- par(mfrow = c(2, 3)) #, mai = c(0.2, 0.2, 0.2, 0.2))
+sapply(names(fpm), function(N) {
+  fit <- mypreds[[N]]
+  col = c("blue", "red")
+  plot(fit, col = col, lwd = 2, main= N, xlab = "Time (Days)",
+       ylab = "Fraction Surviving")
+  legend("topright", paste(c("low", "high"), "risk"), col = col, lwd = 2)
+})
+par(opar)
+opar <- par(mfrow = c(2, 3))
+dev.off()
+rm(fpm, opar, resn)
+```
 ## MOFA
 We have run the unsupervised MOFA2 algorithm to find 10 latent factors across the
 ESCA multi-omics data sets (data not shown). We used those factors as predictors in

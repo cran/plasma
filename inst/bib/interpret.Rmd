@@ -44,10 +44,17 @@ cancer Level 3 data set [@tcga2017] from the FireBrowse web site (http://firebro
 the most informative, features were retained. Here, we load the model produced in the
 previous vignette by analyzing this sample data set.
 ```{r data}
-U <- url("http://silicovore.com/data/plESCA.Rda")
-created <- load(U, .GlobalEnv)
-close(U)
-rm(U, created)
+# Loading from the URL may timeout, depending in the speed of your internet connection.
+# If this happens, you can obtain the Rda file manually, either by creating it from the
+# 'save' command in the plasma.Rmd code, or manually downloading from the URL.
+if (file.exists("plESCA.Rda")) {
+  load("plESCA.Rda")
+} else {
+  U <- url("http://silicovore.com/data/plESCA.Rda")
+  created <- load(U, .GlobalEnv)
+  close(U)
+  rm(U, created)
+}
 ```
 
 # Interpretation of the Model
@@ -70,7 +77,7 @@ mainterms
 ```
 We see that at least one component discovered from four of the five "true" omics data sets
 survived in the final model; only the miR components failed to make the cut. In addition, one
-component from the binary clinical data was retained in the final model.
+component from each the binary and continuous clinical data was retained in the final model.
 
 ## Final (Composite) Weights
 A key point to note is that the core of the `plasma` model consists of a composition
@@ -79,7 +86,7 @@ predicts the "_components_" that we have learned across all data sets. The secon
 uses the components as predictors in a Cox proportional hazards model of time-to-event
 (i.e., overall survival) data. The composite of these two steps is yet another linear model.
 In particular, we should be able to compute the matrix that links the features from the
-omics-level data sets directly to the final survival ourtcome.
+omics-level data sets directly to the final survival outcome, which is done here with the `getFinalWeights()` function. **Figure 1** displays the distribution of the standardized weights of each omics dataset.
 
 ```{r fig01, fig.cap = .tag(1, "Distribution of standardized feature weights in the final model, by data set.")}
 FW <- getFinalWeights(pl)
@@ -93,6 +100,16 @@ rm(foo, palette36)
 beanplot(Standard ~ Source, data = FW, what = c(1, 1, 1, 0), col = colist,
          main = "Standardized Feature Weights")
 abline(h=c(1.96, -1.96), col = "gray")
+```
+
+Features from the individual omics data sets with the highest weight in the final model are shown in **Figure 2**.
+```{r fig.cap = .tag(2,"Highly weighted features in the final Cox model. Positive weights (red) indicate increased hazard ratio; negative weights (cyan) indicate decreased hazard ratio."), fig.width = 9, fig.height = 12}
+opar <- par(mfrow = c(3, 2))
+for (N in names(pl@traindata@data)[-2]) {
+  barplot(pl, N, 5)
+}
+par(opar)
+
 ```
 
 In order to interpret the model, we would like to convert as many features as possible
@@ -112,9 +129,15 @@ features2Genes <- function(df, translators) {
   genes
 }
 
-illumina <- read.csv(file.path("https://webdata.illumina.com/downloads/productfiles",
-                               "humanmethylation450/humanmethylation450_15017482_v1-2.csv"),
-                     skip=7) 
+# Loading from the URL may timeout, depending in the speed of your internet connection.
+# If this happens, you can obtain the CSV file locally by  manually downloading from the URL.
+if (file.exists("humanmethylation450_15017482_v1-2.csv")) {
+  illumina <- read.csv("humanmethylation450_15017482_v1-2.csv", skip = 7)
+} else {
+  illumina <- read.csv(file.path("https://webdata.illumina.com/downloads/productfiles",
+                                 "humanmethylation450/humanmethylation450_15017482_v1-2.csv"),
+                       skip=7) 
+}
 illumina <- illumina[, c("IlmnID", "UCSC_RefGene_Name")] # only care about two columns
 illumina2genes <- function(Y) {
   illuminaFeatures <- illumina[which(illumina$IlmnID %in% Y),] # which did we use?
@@ -158,14 +181,6 @@ if (!file.exists(output)) {
 ```
 
 
-```{r fig.cap = .tag("X", ""), fig.width = 9, fig.height = 12}
-opar <- par(mfrow = c(3, 2))
-for (N in names(pl@traindata@data)[-2]) {
-  barplot(pl, N, 5)
-}
-par(opar)
-
-```
 
 ## Lists of Significant Genes by Component
 Here we combine the weight matrices for features from all data sets into all components
@@ -295,7 +310,7 @@ shortnames <- substring(usn, 1, 38)
 enrichment$Name <- substring(enrichment$Name, 1, 38)
 ```
 
-```{r fig02, fig.width=7, fig.height=7, fig.cap = .tag(2,"Clustering components based on disease annotation p-values."), fig.width = 12, fig.height = 9}
+```{r fig02, fig.width=7, fig.height=7, fig.cap = .tag(3,"Clustering components based on disease annotation p-values."), fig.width = 12, fig.height = 9}
 library(ggplot2)
 library(ClassDiscovery)
 bubbly <- function(cat) {
@@ -319,19 +334,27 @@ bubbly <- function(cat) {
   list(hc = hc, gc = gc, tap = tap, p = p)
 }
 
-bubbly("Disease")$p
+bub_p<- bubbly("Disease")$p
+bub_p[["theme"]][["axis.text.x"]][["size"]] <- 5
+plot(bub_p)
 ```
 
-```{r fig03, fig.width=7, fig.height=7, fig.cap = .tag(3, "Clustering components based on pathway annotation p-values."), fig.width = 12, fig.height = 9}
-bubbly("Pathway")$p
+```{r fig03, fig.width=7, fig.height=7, fig.cap = .tag(4, "Clustering components based on pathway annotation p-values."), fig.width = 12, fig.height = 9}
+bub_p<- bubbly("Pathway")$p
+bub_p[["theme"]][["axis.text.x"]][["size"]] <- 5
+plot(bub_p)
 ```
 
-```{r fig04, fig.width=7, fig.height=7, fig.cap = .tag(4, "Clustering components based on bioogical process annotation p-values."), fig.width = 12, fig.height = 9}
-bubbly("GeneOntologyBiologicalProcess")$p
+```{r fig04, fig.width=7, fig.height=7, fig.cap = .tag(5, "Clustering components based on bioogical process annotation p-values."), fig.width = 12, fig.height = 9}
+bub_p<- bubbly("GeneOntologyBiologicalProcess")$p
+bub_p[["theme"]][["axis.text.x"]][["size"]] <- 5
+plot(bub_p)
 ```
 
-```{r fig05, fig.width=7, fig.height=7, fig.cap = .tag(5, "Clustering components based on cellular comnponent annotation p-values."), fig.width = 12, fig.height = 9}
-bubbly("GeneOntologyCellularComponent")$p
+```{r fig05, fig.width=7, fig.height=7, fig.cap = .tag(6, "Clustering components based on cellular comnponent annotation p-values."), fig.width = 12, fig.height = 9}
+bub_p<- bubbly("GeneOntologyCellularComponent")$p
+bub_p[["theme"]][["axis.text.x"]][["size"]] <- 5
+plot(bub_p)
 ```
 
 ## Interpretation by Data Set
@@ -347,7 +370,7 @@ extracted using the `getAllWeights` function, and can then be explored.
 ### Clinical Binary Data
 We use the binary clinical data set to begin illustrating one method for interpreting
 the components.
-```{r fig06, fig.cap = .tag(6, "Unscaled heatmap of the contributions of binary clinical features to all components (purple = retained in final model, green = not retained)."), fig.height = 7}
+```{r fig06, fig.cap = .tag(7, "Unscaled heatmap of the contributions of binary clinical features to all components (purple = retained in final model, green = not retained)."), fig.height = 7}
 
 library(oompaBase)
 HG <-  blueyellow(64)
@@ -356,7 +379,7 @@ compcolors <- c("forestgreen", "purple")[1 + 1*(colnames(cbin@contrib) %in% main
 heat(cbin, cexCol = 0.9, cexRow = 0.5, col = HG, ColSideColors = compcolors)
 ```
 
-**Figure 6** shows the raw weights for each clinical binary feature in all of the original
+**Figure 7** shows the raw weights for each clinical binary feature in all of the original
 omics components. We would like to simplify this plot in several ways. First, we can remove
 any components that were not retained in the final model (indicated by the green color bar
 in the top dendrogram). Second, we hypothesize that some
@@ -373,12 +396,12 @@ shrink <- function(dset, N) {
 }
 ```
 
-```{r fig07, fig.cap = .tag(7, "Scaled heatmap of the contributions of filtered binary clinical features to important components."), fig.height = 7}
+```{r fig07, fig.cap = .tag(8, "Scaled heatmap of the contributions of filtered binary clinical features to important components."), fig.height = 7}
 xbin <- shrink(cbin, 4)
 heat(xbin, cexCol = 0.9, cexRow = 0.9, col = HG)
 ```
 
-In **Figure 7**, we can identify strong contrasts between several pairs of variables. For example,
+In **Figure 8**, we can identify strong contrasts between several pairs of variables. For example,
 one set of components is enriched with white, never smokers, who still have evidence of tumors, at
 stage T3 and grade 3 in the lower third of the esophagus (ICD-10 code C15.5), while another group
 is enriched for Asian, current smokers, who are tumor-free, with stage N0, T2 tumors from the
@@ -388,8 +411,8 @@ lower third of the esophagus (ICD-10 code C15.4).
 We can apply the same method to visualize contributors from each of the omics data sets.
 As a second illustration, we look at the standardized weights from the mRNA data set in the components
 that are part of the final model, keeping only those features that are highly ranked by absolute
-weight in at least one component (**Figure 8**).
-```{r fig08, fig.cap = .tag(8, "Scaled heatmap of the contributions of filtered mRNA features to important components"), fig.height = 7}
+weight in at least one component (**Figure 9**).
+```{r fig08, fig.cap = .tag(9, "Scaled heatmap of the contributions of filtered mRNA features to important components"), fig.height = 7}
 mrna <- getAllWeights(pl, "mRNASeq")
 xmrna <- shrink(mrna, 7)
 tmp <- rownames(xmrna@contrib)
@@ -405,28 +428,28 @@ heatmaps from all the datasets and then try to combine the influences. In order 
 we can merge all the contributions into a single data frame, with an accompanying factor tracking
 the source data set.
 
-**Figure 9** displays the mean, standard deviation (SD), median, and median absolute deviation (MAD)
+**Figure 10** displays the mean, standard deviation (SD), median, and median absolute deviation (MAD)
 of the weight-contributions for each data set in each component. 
-```{r fig09, fig.cap = .tag(9, "Summary statistics of weights by component and dataset."), fig.width = 10, fig.height = 10}
+```{r fig09, fig.cap = .tag(10, "Summary statistics of weights by component and dataset."), fig.width = 10, fig.height = 10}
 image(CW)
 ```
 
 ## Standardized Weights
 To remain consistent with the previous heatmaps, we have standardized the weights in each data set
-and component. In **Figure 10**, we create beanplots showing the distributions of weights arising
+and component. In **Figure 11**, we create beanplots showing the distributions of weights arising
 from each data set in each (retained) component. (Similar plots for the raw weights are available
 in **Supplementary Data**.) Some data sets have very different contribution patterns than others.
 For example, the miRSeq data set appears to have significant outliers making large contributions
 in almost every component, the MAF and RPPA data sets also frequently (but not always) include
 such outliers.
-```{r fig10, fig.cap = .tag(10, "Distributions of standardized weights by data set and component."), fig.width = 10, fig.height = 10}
+```{r fig10, fig.cap = .tag(11, "Distributions of standardized weights by data set and component."), fig.width = 10, fig.height = 10}
 library(beanplot)
 library(Polychrome)
 data(palette36)
 foo <- computeDistances(palette36[3:36])
 colist <- as.list(palette36[names(foo)[1:7]])
 brute <- stdize(CW, "standard")
-opar <- par(mfrow = c(3,3), mai = c(0.2,0.2, 0.5, 0.2))
+opar <- par(mfrow = c(4,3), mai = c(0.2,0.2, 0.5, 0.2))
 for (i in which(colnames(contra) %in% mainterms)) {
   beanplot(brute[, i] ~ datasrc, what = c(1,1,1,0), col = colist,
            main = paste("Std Wts, Component", i))
@@ -435,10 +458,10 @@ par(opar)
 rm(opar)
 ```
 
-We also include plots of the histograms of distributions by component (**Figure 11**). None of
+We also include plots of the histograms of distributions by component (**Figure 12**). None of
 these really looks quite normal; almost all have some slightly odd shape.
-```{r fig11, fig.cap = .tag(11, "Histogram of standardized weights by component."), fig.width = 10, fig.height = 10}
-opar <- par(mfrow = c(3, 3), mai = c(0.2,0.2, 0.5, 0.2))
+```{r fig11, fig.cap = .tag(12, "Histogram of standardized weights by component."), fig.width = 10, fig.height = 10}
+opar <- par(mfrow = c(4, 3), mai = c(0.2,0.2, 0.5, 0.2))
 for (i in which(colnames(contra) %in% mainterms)) {
   hist(brute[,i], breaks = 77, main = paste("Component", i))
 }
@@ -449,12 +472,12 @@ rm(opar)
 
 ## Data Set Sources of Top Twenty Lists
 Next, we want to see how many items in the lists of "top twenty" contributers to each component
-come from each data set. The results are shown in **Figure 12**. Using the raw weights, the vast
+come from each data set. The results are shown in **Figure 13**. Using the raw weights, the vast
 majority of contributions come from the clinical binary data, with secondary contributions from
 the MAF and RPPA data sets (as we expected from the above distribution plots). After standardization,
 most of the contributions arise from miRs, but the methylation, mRNA and, to a lesser extent, the
 MAF and RPPA data sets also are present.
-```{r fig1, fig.cap = .tag(12, "Number of contributers to top twenty lists."), fig.width=9, fig.height=6}
+```{r fig1, fig.cap = .tag(13, "Number of contributers to top twenty lists."), fig.width=9, fig.height=6}
 top20 <- apply(contra, 2, function(X) {
   A <- abs(X)
   S <- rev(sort(A))
@@ -487,13 +510,13 @@ rm(opar)
 ```
 
 ## Overall Distribution of Weights
-In **Figure 13**, we pool all the weights (across all data sets and all components) to look at
+In **Figure 14**, we pool all the weights (across all data sets and all components) to look at
 histograms of the distributions. We also overlay the theoretical normal distribution that one
 would expect to see. Using the usual mean and distribution (right panel), the actual weights
 are slightly more conservative (i.e., concentrated near zero) than expected. This figure
 suggests that we might want to use standardization, and decide on significance purely from the
 theoretical normal distribution rather than from deviations away from that distribution.
-```{r fig13, fig.cap = .tag(13, "Histograms of all weights (combined)."), fig.width=9, fig.height=6}
+```{r fig13, fig.cap = .tag(14, "Histograms of all weights (combined)."), fig.width=9, fig.height=6}
 opar <- par(mfrow = c(1, 2))
 hist(contra, breaks = 123, main = "Raw Weights", prob = TRUE)
 xx <- seq(-10, 10, length=1001)
@@ -507,19 +530,19 @@ rm(opar)
 ```
 
 ## Number of Contributers Selected by Normal Significance
-Finally, we create yet another image (**Figure 14**), counting the number of significant features
+Finally, we create yet another image (**Figure 15**), counting the number of significant features
 from each data set for each component, when using a significance cutoff of 5% derived from the
 standard normal distribution. We feel that this result is more reasonable than any thing we got
 just by looking at the top 20 lists. Most contributions come from the biggest omics data sets
 (mRNA, methylation, and miR) with fewer from MAF, RPPA, and clinical binary.
-```{r fig14, fig.cap = .tag(14, "Number of significant contributions by data set and component."), fig.width=6, fig.height=6}
+```{r fig14, fig.cap = .tag(15, "Number of significant contributions by data set and component."), fig.width=6, fig.height=6}
 Q <- qnorm(0.975) # two-sided 5% cutoff
 top1p <- aggregate(brute, list(datasrc), function(X) sum(abs(X) > Q)) # top 5 percent
 rownames(top1p) <- top1p[, 1]
 top1p <- as.matrix(top1p[, -1])
 top1p <- top1p[, mainterms]
 opar <- par(mai = c(1.02, 0.82,1.22, 0.22))
-image(1:7, 1:9, top1p, ylab = "Components", xlab = "Data Sets")
+image(1:nrow(top1p), 1:ncol(top1p), top1p, ylab = "Components", xlab = "Data Sets")
 mtext(levels(datasrc), side = 3, at = 1:7, line = 1, las=2)
 par(opar)
 ```
@@ -596,7 +619,7 @@ PCDHA12 (Protocadherin Alpha 12)
 These descriptions clearly indicate some common functional relationships between the mutated genes,
 including a role in cilia, flagella, and microfibrils.
 
-We then extracted all gene names from the MAF, mRNASeq, and RPPA data sets and used thm to perform a
+We then extracted all gene names from the MAF, mRNASeq, and RPPA data sets and used them to perform a
 gene enrichment (pathway) analysis using ToppGene [@chen2009]. Associated GeneOntology Biological Process
 categories included keratinization, epidermal and epithelial cell development, cell adhesion,
 intermediate filament organization, and wound healing. GeneOntology Cellular Components included
@@ -605,38 +628,14 @@ included hyperkeratosis (particularly follicular hyperkeratosis), epidermal thic
 leukoplakia. Associated pathways included keratinization, gap junction assembly and trafficking,
 and both ErbB and mTOR signaling. Associated cytogenetic regions included 1q21-1q22, 18q12.1,
 and 12q12.13. Associated gene families included cadherins, kallikreins, keratins, and gap-junction
-proteins. Associated diseases included hyperkertosis, squamous cell carcinoma of the head and neck,
+proteins. Associated diseases included hyperkeratosis, squamous cell carcinoma of the head and neck,
 intraepithelial neoplasia, endometrial carcinoma, basal-like breast carcinoma, and esophageal carcinoma.
 
 
-
 # Conclusions
-We have identified a method analogous to that of `MOFA` that allows us
-to combine different omics data without the need for prior imputation
-of missing values. A major difference is that while `MOFA` model
-learns "factors" that are composites of the variables in an
-unsupervised fashion, the `plasma` model learns "components" that are
-composites of the variables in an supervised fashion, using the
-outcomes "event" and "time-to-event" as response variables.
 
-Although the factors from `MOFA` are defined such that the first
-factor, Factor 1, accounts for the greatest variance in the model, the
-factors may or may not be significantly associated with the outcome,
-and a post-hoc survival analysis would need to be done to assess
-this. It may be the case that some factors, although they are
-significantly associated with outcome, account for very small variance
-in the final `MOFA` model, which hinders interpretability. This was
-the case with the TCGA-ESCA dataset, in which, when 10 factors were
-learned from the `MOFA` model, only Factor 10 was significantly
-associated with survival, while accounting for [number] variance in
-the model [CITE SUPPLEMENTARY RESULTS?]. On the other hand, the
-components for `plasma` are created in a way that maximizes the
-covariance in the predictors and the response, and therefore these
-components will be automatically associated to some degree with the
-outcome. This could be advantageous in that dissecting the weights
-associated with the components would yield a list of variables from
-different omics datasets that contribute the most to defining the
-outcome, and any additional analyses could be refined by looking at
-these high-weighted variables most closely.
+As described in the previous document (`plasma.Rmd`), we have identified a supervised method called `plasma` that learns "components" that are composites of the original variables that are related to the survival outcome. In this document, we have computed the matrix that connects the features from the omics-level data sets to the survival outcome using a function `getFinalWeights()`. Examination of these feature weights (**Figure 2**) reveals that the `plasma` model is biologically sensible; for example, we see from the clinical binary features that tumor presence at the time of sample collection are associated with greater hazard ratio, as expected. The highest weighted miRNA corresponded to hsa-miR-205, which is consistent with existing literature indicating that miR-205 is upregulated in esophageal squamous cell carcinoma and may modulate the initial steps of the metastatic cascade [@matsushima2011].
+
+The pathway annotations from ToppGene (**Figure 3**) gives us insight into the biological characteristics of the PLS components that were found to be significantly related to OS. It is particularly striking that all components were associated to some degree with pathway annotation terms related to fibroblast activity (ex. "Burn wound healing", "Ensemble of genes encoding extracellular matrix and extracellular matrix-associated proteins", and "fibronectin matrix formation"). Taken together with ToppGene enrichments in GeneOntology terms such as cell adhesion, cell-cell junctions, and mTOR signaling and our observations from **Figure 2**, we can tentatively conclude that the `plasma` components are enriched with ontology terms that points to tumor permissiveness and metastasis [@kalluri2016; @nieto2013]. In summary, we have identified several ways to dissect the components learned by `plasma`, and have found that these results appear to be congruous with each other.
 
 # References

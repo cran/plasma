@@ -112,12 +112,16 @@ setMethod("barplot", c("plasma"), function(height, source, n,
   ## Get positive and negative weights. Start with negative.
   wmutDn <- wws[wws$Source  == source, ]
   wmutDn <- wmutDn[order(wmutDn$Weight),]
-  wmutDn <- wmutDn[1:n,]
+  wmutDn <- wmutDn[wmutDn$Weight < 0,]
+  m <- min(nrow(wmutDn), n)
+  wmutDn <- wmutDn[1:m,]
 
   ## Then add positive weights.
   wmutUp <- wws[wws$Source  == source,]
   wmutUp <- wmutUp[order(wmutUp$Weight, decreasing = TRUE),]
-  wmutUp <- wmutUp[1:n,]
+  wmutUp <- wmutUp[wmutUp$Weight > 0,]
+  m <- min(nrow(wmutUp), n)
+  wmutUp <- wmutUp[1:m,]
 
   ##
   wmut <- switch(direction,
@@ -127,7 +131,8 @@ setMethod("barplot", c("plasma"), function(height, source, n,
   wmut <- wmut[order(abs(wmut$Weight), decreasing = FALSE),]
   wmut$Feature <- factor(as.character(wmut$Feature),
                          levels = unique(wmut$Feature))
-  MX <- max(abs(wmut$Weight))
+##  print(summary(wmut))
+  MX <- max(abs(wmut$Weight), na.rm = TRUE)
   ptr <- switch(direction,
                 both = painter(c(-MX, MX), c(lhcol[1], "white", lhcol[2])),
                 up = painter(c(0, MX), c("white", lhcol[2])),
@@ -157,6 +162,7 @@ setMethod("barplot", c("plasma"), function(height, source, n,
 })
 
 painter <- function(range, colors, N = 64) {
+##  cat("painter called with", range, "\n", file = stderr())
   crp <- colorRampPalette(colors)
   pal <- crp(N)
   bks <- seq(min(range), max(range), length = N)

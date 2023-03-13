@@ -61,12 +61,21 @@ setMethod("heat", "Contribution", function(object, main = "Contributions",
 ## M and N are names of data sets being modeled
 getCompositeWeights <- function(object, N, M) {
   cm <- object@compModels # returns a list of lists for all pairs of data sets
-  wb <- cm[[N]]$plsRegression # ge the model for data set M
+  wb <- cm[[N]]$plsRegression # get the model for data set M
   inside <- wb[[M]]
   learn <- inside$learn # rest will FAIL if we were unable to construct a PLS model
-  V <- as.vector(L <- learn$loadings)
-  Y <- learn$Yloadings
-  cross <- L %*% t(Y)
+  if (inherits(learn , "mvr")) {
+    V <- as.vector(L <- learn$loadings)
+    Y <- learn$Yloadings
+    cross <- L %*% t(Y)
+  } else {
+    ## return a matrix of NA's of the correct size
+    XN <- object@traindata@data[[N]]
+    cross <- matrix(0, nrow = nrow(XN),
+                    ncol = ncol(inside$extend))
+    rownames(cross) <- rownames(XN)
+    colnames(cross) <- colnames(inside$extend)
+  }
   new("Contribution",
       contrib = cross,
       datasets = c(N, M))
@@ -74,7 +83,9 @@ getCompositeWeights <- function(object, N, M) {
 
 getAllWeights <- function(object, N) {
   whatever <- lapply(names(object@compModels), function(D) {
-    getCompositeWeights(object, N, D)@contrib
+    G <- getCompositeWeights(object, N, D)@contrib
+##    cat(N, " ", dim(G), "\n", file = stderr())
+    G
   })
   W <- which(sapply(whatever, ncol) == 1)
   names(whatever) <- names(object@compModels)
