@@ -94,6 +94,7 @@ getFinalWeights <- function(object) {
     data.frame(Weight = X, Source = N, Feature = rownames(X))
   })
   FW <- do.call(rbind, runthrough)
+  FW <- FW[order(FW$Source),]
   mu <- aggregate(FW$Weight, list(FW$Source), mean)
   mu2 <- rep(mu$x, times = as.vector(table(FW$Source)))
   sigma <- aggregate(FW$Weight, list(FW$Source), sd)
@@ -105,21 +106,24 @@ getFinalWeights <- function(object) {
 setMethod("barplot", c("plasma"), function(height, source, n,
                                            direction = c("both", "up","down"),
                                            lhcol = c("cyan", "red"),
+                                           wt = c("raw", "std"),
                                            ...) {
   direction <- match.arg(direction)
+  wt <- match.arg(wt)
+  wtsrc <- ifelse(wt == "std", "Standard", "Weight")
   wws <- getFinalWeights(height) # default name from function, but a plasma object
 
   ## Get positive and negative weights. Start with negative.
   wmutDn <- wws[wws$Source  == source, ]
-  wmutDn <- wmutDn[order(wmutDn$Weight),]
-  wmutDn <- wmutDn[wmutDn$Weight < 0,]
+  wmutDn <- wmutDn[order(wmutDn[, wtsrc]),]
+  wmutDn <- wmutDn[wmutDn[, wtsrc] < 0,]
   m <- min(nrow(wmutDn), n)
   wmutDn <- wmutDn[1:m,]
 
   ## Then add positive weights.
   wmutUp <- wws[wws$Source  == source,]
-  wmutUp <- wmutUp[order(wmutUp$Weight, decreasing = TRUE),]
-  wmutUp <- wmutUp[wmutUp$Weight > 0,]
+  wmutUp <- wmutUp[order(wmutUp[, wtsrc], decreasing = TRUE),]
+  wmutUp <- wmutUp[wmutUp[, wtsrc] > 0,]
   m <- min(nrow(wmutUp), n)
   wmutUp <- wmutUp[1:m,]
 
@@ -128,20 +132,20 @@ setMethod("barplot", c("plasma"), function(height, source, n,
                  up = wmutUp,
                  down = wmutDn,
                  both = rbind(wmutUp, wmutDn))
-  wmut <- wmut[order(abs(wmut$Weight), decreasing = FALSE),]
+  wmut <- wmut[order(abs(wmut[, wtsrc]), decreasing = FALSE),]
   wmut$Feature <- factor(as.character(wmut$Feature),
                          levels = unique(wmut$Feature))
 ##  print(summary(wmut))
-  MX <- max(abs(wmut$Weight), na.rm = TRUE)
+  MX <- max(abs(wmut[, wtsrc]), na.rm = TRUE)
   ptr <- switch(direction,
                 both = painter(c(-MX, MX), c(lhcol[1], "white", lhcol[2])),
                 up = painter(c(0, MX), c("white", lhcol[2])),
                 down = painter(c(-MX, 0), c(lhcol[1], "white")))
-  mycol <- ptr(wmut$Weight)
+  mycol <- ptr(wmut[, wtsrc])
   spar <- par(mai = c(0.82, 2.02, 0.42, 0.42))
   on.exit(par(spar))
-  pts <- barplot(wmut$Weight, horiz = TRUE, col = mycol, xlim = c(-MX, 2*MX))
-  mtext(rownames(wmut), side = 2, at = pts, las = 2, line = 1)
+  pts <- barplot(wmut[, wtsrc], horiz = TRUE, col = mycol, xlim = c(-MX, 2*MX))
+  mtext(rownames(wmut), side = 2, at = pts, las = 2, line = 1, ...)
   par(new = TRUE)
   pin <- par("pin")
   mai <- par("mai")

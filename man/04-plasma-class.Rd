@@ -28,7 +28,7 @@ Objects should be defined using the \code{plasma} function.
 plasma(object, multi)
 \S4method{plot}{plasma,missing}(x, y, \dots)
 \S4method{barplot}{plasma}(height, source, n, direction = c("both", "up","down"),
-                lhcol = c("cyan", "red"), \dots)
+                lhcol = c("cyan", "red"), wt = c("raw", "std"),  \dots)
 \S4method{predict}{plasma}(object, newdata = NULL, type = c("components", "risk",
                  "split"), \dots)
 }
@@ -45,7 +45,9 @@ plasma(object, multi)
   \item{direction}{A length-one character vector; show features with
     positive weights (up), negative (down), or both.}
   \item{lhcol}{A chaacter vector of length 2, indicating the preferred
-  colors for low (negative) or high (positive) weights.}
+    colors for low (negative) or high (positive) weights.}
+  \item{wt}{A character string indicating whether to plot raw weights or
+    standardized weights.}
   \item{newdata}{A \code{MultiOmics} object with the same structure as
     the training data.}
   \item{type}{An enumerated character value.}

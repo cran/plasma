@@ -43,7 +43,7 @@ loadLUSCdata(env = plasmaEnv)
       on the GDC Dat Portal from which these data originally came. This
       was done to illustrate the capability of the \code{plasma} package
       on working with missing data.}
-    \enumerate{
+    \describe{
     \item{\code{ClinicalBin}}{a dataframe (53x185) of clinical binary values.}
     \item{\code{ClinicalCont}}{a dataframe (6x185) of clinical continuous values.}
     \item{\code{MAF}}{a dataframe (566x184) of minor allele frequencies

@@ -84,7 +84,7 @@ fitSingleModel(multi, N, timevar, eventvar, eventvalue)
 \value{
   The \code{fitSingleModel} function returns a newly constructed object
   of the \code{SingleModel} class. The \code{plot} method invisibly
-  returns the value on which it was invoked. The {summary} method
+  returns the value on which it was invoked. The \code{summary} method
   returns an object summarizing the final model produced by PLS R cox
   regression. The \code{predict} method returns either a vector or
   matrix depending on the type of predictions requested.

@@ -44,6 +44,9 @@ setMethod("plot", c("MultiplePLSCoxModels", "missing"), function(x, y,  col = c(
   for (N in names(x@models)) {
     plot(x@models[[N]], main = N,  col = col, lwd = lwd, xlab = xlab, ylab = ylab,
          mark.time = mark.time, legloc = legloc, ...)
+    S <- summary(x@models[[N]]@splitModel)
+    PT <- S$sctest[3]
+    title(sub = paste("p =", formatC(PT, format = "e", digits = 2)))
   }
   invisible(x)
 })

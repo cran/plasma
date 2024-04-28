@@ -17,6 +17,8 @@ fitSingleModel <- function(multi, N, timevar, eventvar, eventvalue) {
   X <- X[, !allNA]
   ident <- apply(X, 1, function(x) length(unique(x[!is.na(x)])))
   X <- X[ident > 1, ]
+  nz <- apply(X, 1, function(x) sum(x > min(x, na.rm=TRUE), na.rm=TRUE))
+  X <- X[nz > max(3, 0.01*nrow(X)),]
   out <-  multi@outcome
   Xout <-out[colnames(X),]
   mynt <- round(1 + log10(nrow(X)))
