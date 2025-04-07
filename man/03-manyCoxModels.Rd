@@ -62,12 +62,12 @@ fitCoxModels(multi, timevar, eventvar, eventvalue, verbose)
 
 \section{Methods}{
   \describe{
-      \item{\code{\link{plot}}:}{Plots Kaplan-Meier curves for each
+      \item{\code{\link[base]{plot}}:}{Plots Kaplan-Meier curves for each
 	omics dataset split into Low Risk and High Risk groups.}
-      \item{\code{\link{summary}}:}{Returns a description of the
+      \item{\code{\link[base]{summary}}:}{Returns a description of the
 	\code{MultiplePLSCoxModels} object and the names of the omics
 	datasets used to build the model.}
-      \item{\code{\link{predict}}:}{usually returns a list of numeric
+      \item{\code{\link[stats]{predict}}:}{usually returns a list of numeric
   vectors of predicted risk per data type. When \code{type = "survfit"},
   retuns a list of \code{survfit} objects.}
   }

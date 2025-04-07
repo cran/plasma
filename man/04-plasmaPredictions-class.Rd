@@ -57,7 +57,7 @@
 }
 \section{Methods}{
   \describe{
-      \item{\code{\link{plot}}:}{Produces Kaplan-Meier curves for the
+      \item{\code{\link[base]{plot}}:}{Produces Kaplan-Meier curves for the
 	low risk and high risk groups.}
   }
 }

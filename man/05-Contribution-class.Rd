@@ -52,8 +52,8 @@ pickSignificant(object, alpha)
 }
 \section{Methods}{
   \describe{
-      \item{\code{\link{summary}}:}{outputs summary statistics for the contributions of dataset \code{N} to components from all datasets in the case of \code{getAllWeights} or dataset \code{M} in the case of \code{getCompositeWeights}.}
-      \item{\code{\link{image}}:}{outputs a heatmap of the transposed \code{contrib} matrix.}
+      \item{\code{\link[base]{summary}}:}{outputs summary statistics for the contributions of dataset \code{N} to components from all datasets in the case of \code{getAllWeights} or dataset \code{M} in the case of \code{getCompositeWeights}.}
+      \item{\code{\link[graphics]{image}}:}{outputs a heatmap of the transposed \code{contrib} matrix.}
       \item{\code{heat}:}{outputs a clustered heatmap of the \code{contrib} matrix.}
   }
 }

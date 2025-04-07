@@ -70,12 +70,12 @@ fitSingleModel(multi, N, timevar, eventvar, eventvalue)
 
 \section{Methods}{
   \describe{
-      \item{\code{\link{plot}}:}{Plots Kaplan-Meier curves for each
+      \item{\code{\link[base]{plot}}:}{Plots Kaplan-Meier curves for each
 	omics dataset split into Low Risk and High Risk groups.}
-      \item{\code{\link{summary}}:}{Returns a description of the
+      \item{\code{\link[base]{summary}}:}{Returns a description of the
 	\code{MultiplePLSCoxModels} object and the names of the omics
 	datasets used to build the model.}
-      \item{\code{\link{predict}}:}{Usually, a numeric vector containing
+      \item{\code{\link[stats]{predict}}:}{Usually, a numeric vector containing
         the predicted risk values. However, when using \code{type =
 	"survfit"}, tghe return value is a \code{survfit} object from
 	the\code{survival} package.}

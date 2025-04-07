@@ -62,9 +62,9 @@ plasma(object, multi)
 }
 \section{Methods}{
   \describe{
-      \item{\code{\link{plot}}:}{Plots a Kaplan-Meier curve of the final \code{coxph} model that has been categorized into \dQuote{low risk} and \dQuote{high risk} based whether it is higher or lower, respectively, than the median value of risk.}
-      \item{\code{\link{predict}}:}{creates an object of class \code{plasmaPredictions}.}
-      \item{\code{\link{barplot}}:}{Produces a barplot of the \code{n} largest
+      \item{\code{\link[base]{plot}}:}{Plots a Kaplan-Meier curve of the final \code{coxph} model that has been categorized into \dQuote{low risk} and \dQuote{high risk} based whether it is higher or lower, respectively, than the median value of risk.}
+      \item{\code{\link[stats]{predict}}:}{creates an object of class \code{plasmaPredictions}.}
+      \item{\code{\link[graphics]{barplot}}:}{Produces a barplot of the \code{n} largest
 	weights assigned to features from the appropriate data \code{source}.}
   }
 }

@@ -38,8 +38,8 @@ prepareMultiOmics(datalist, outcome)
 }
 \section{Methods}{
   \describe{
-      \item{\code{\link{plot}}:}{Produces a visual representation of the  dimensionalities of each dataframe in datalist. D corresponds to the number of variables in each omics dataframe, and N corresponds to samples (or members) whose variable is not entirely missing. Gray areas correspond to missing samples.}
-      \item{\code{\link{summary}}:}{Produces summary tables corresponding to datasets and outcomes.}
+      \item{\code{\link[base]{plot}}:}{Produces a visual representation of the  dimensionalities of each dataframe in datalist. D corresponds to the number of variables in each omics dataframe, and N corresponds to samples (or members) whose variable is not entirely missing. Gray areas correspond to missing samples.}
+      \item{\code{\link[base]{summary}}:}{Produces summary tables corresponding to datasets and outcomes.}
   }
 }
 \value{
