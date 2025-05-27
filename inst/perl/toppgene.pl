@@ -18,7 +18,7 @@ $ua->agent("tricolor/1.0 ");
 my $httpHeads = HTTP::Headers->new;
 $httpHeads->header('Content-Type' => 'text/json');
 
-my $verbose = 0;
+my $verbose = 1;
 my $logfile = "toppgene2.log";
 open(LOG, ">>$logfile") or die "Unable to write to 'logfile'.\n";
 print LOG "START\n";
@@ -61,10 +61,11 @@ print STDERR join(" ", @symbols), "\n";
 my $lookup = 'https://toppgene.cchmc.org/API/lookup';
 my %hash = (Symbols => \@symbols);
 my $firstparams = $json->encode(\%hash);
-print STDERR $firstparams, "\n\n" if $verbose;
+#print STDERR $firstparams, "\n\n" if $verbose;
 
 ### Set up the request.
 my $firstRequest = HTTP::Request->new('POST', $lookup, $httpHeads,  $firstparams);
+print STDERR "\n",  $firstRequest->as_string, "\n\n";
 ### Send it.
 my $firstResponse = $ua->request($firstRequest);
 ### Test to make sure it worked as expected.
